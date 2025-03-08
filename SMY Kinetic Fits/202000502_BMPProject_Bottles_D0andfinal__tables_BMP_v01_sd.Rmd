@@ -1,0 +1,384 @@
+---
+title: "Making High-quality tables in R"
+author: "Sarah Daly"
+date: "April 17, 2019"20
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+editor_options:
+  chunk_output_type: console
+---
+Purpose:  Export 2 tables (.png) in the formate of mean +/- stdev of the raw substrate chemical characteristics and the relevant ratios of these chemical characteristics. Raw substrates also include columns on the qualitiave charactierstics ( Foaming, Date). 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#Install libraries
+```{r functions,echo=T}
+#install.packages("tinytex")
+#tinytex::install_tinytex()  # install TinyTeX
+library(kableExtra)
+library(magrittr)
+library(formattable)
+library(plyr) #plyr should be loaded before dplyr
+library(dplyr)
+library(tinytex)
+library(rmarkdown)
+library(knitr)
+library(devtools)
+library(summarytools)
+library(knitr)
+library(kableExtra)
+library(pander)
+library(formattable)
+```
+#Setworkding directory and loading data
+```{r}
+
+setwd("C:/Users/dalys/OneDrive/Desktop/PHD paper notes/BMP/github/SMY Kinetic Fits")
+
+
+dt <- read.csv("202000502_growthkinetic_input.csv",header=TRUE, na.strings="NA",stringsAsFactors=FALSE)
+head(dt)
+sum(is.na(dt))
+dim(dt)
+
+
+#do not differntait between mids
+dt <- data.frame(lapply(dt, function(x) {
+                  gsub("01/18/18", "1", x)
+              }))
+dt <- data.frame(lapply(dt, function(x) {
+                  gsub("02/18/19", "5", x)
+              }))
+
+dt <- data.frame(lapply(dt, function(x) {
+                  gsub("10/24/18", "4", x)
+              }))
+dt <- data.frame(lapply(dt, function(x) {
+                  gsub("08/09/18", "3", x)
+              }))
+
+dt <- data.frame(lapply(dt, function(x) {
+                  gsub("06/05/18", "2", x)
+              }))
+
+dt <- data.frame(lapply(dt, function(x) {
+                  gsub("05/17/19", "6", x)
+              }))
+
+#Convert to numerica
+sapply(dt, class)
+dt[,11:length(dt)] <- sapply(dt[,11:length(dt)],as.character)
+dt[,11:length(dt)] <- sapply(dt[,11:length(dt)],as.numeric)
+sapply(dt, class)
+
+```
+
+#Growth Kinetic Table
+```{r}
+
+#ONly do final day
+dt=filter(dt, Day=='Final')
+
+#HRT crit
+cdata <- ddply(dt, c("Substrate", "Date","Location","R.2_adj_avg_Chen"), summarise,
+               mean = round(mean(HRTcrit_avg, na.rm=TRUE),digits=0))
+HRTcrit=paste0(cdata$mean, "(", round(cdata$R.2_adj_avg_Chen,digits=2), ")")
+
+#um 
+cdata <- ddply(dt, c("Substrate", "Date","Location","R.2_adj_avg_Chen"), summarise,
+               mean = round(mean(um_avg, na.rm=TRUE),digits=2))
+um=paste0(cdata$mean, "(", round(cdata$R.2_adj_avg_Chen,digits=2), ")")
+um
+
+
+#Kchen
+cdata <- ddply(dt, c("Substrate", "Date","Location","R.2_adj_avg_Chen"), summarise,
+               mean = round(mean(Kchen_avg, na.rm=TRUE),digits=2))
+kchen=paste0(cdata$mean, "(", round(cdata$R.2_adj_avg_Chen,digits=2), ")")
+kchen
+
+#K1
+cdata <- ddply(dt, c("Substrate", "Date","Location","R.2_adj_avg_1st"), summarise,
+               mean = round(mean(K1_avg, na.rm=TRUE),digits=2))
+k1=paste0(cdata$mean, "(", round(cdata$R.2_adj_avg_1st,digits=2), ")")
+
+#K2
+cdata <- ddply(dt, c("Substrate", "Date","Location","R.2_adj_avg_2nd"), summarise,
+               mean = round(mean(K2_avg, na.rm=TRUE),digits=2))
+k2=paste0(cdata$mean, "(", round(cdata$R.2_adj_avg_2nd,digits=2), ")")
+
+#Kt
+cdata <- ddply(dt, c("Substrate", "Date","Location"), summarise,
+               mean = round(mean(Kt_avg, na.rm=TRUE),digits=2))
+kt=paste0(cdata$mean)
+
+#T80
+cdata <- ddply(dt, c("Substrate", "Date","Location"), summarise,
+               mean = round(mean(T80_avg, na.rm=TRUE),digits=0))
+T80=paste0(cdata$mean)
+
+#T90
+cdata <- ddply(dt, c("Substrate", "Date","Location"), summarise,
+               mean = round(mean(T90_avg, na.rm=TRUE),digits=0))
+T90=paste0(cdata$mean)
+
+#lag
+cdata <- ddply(dt, c("Substrate", "Date","Location","R.2_adj_avg_Gompertz"), summarise,
+               mean = round(mean(lag_avg, na.rm=TRUE),digits=0))
+lag=paste0(cdata$mean, "(", round(cdata$R.2_adj_avg_Gompertz,digits=2), ")")
+lag
+
+#K1 mod
+cdata <- ddply(dt, c("Substrate", "Date","Location","R.2_adj_avg_1stmod"), summarise,
+               mean = round(mean(K1_avg.1, na.rm=TRUE),digits=2))
+k1mod=paste0(cdata$mean, "(", round(cdata$R.2_adj_avg_1stmod,digits=2), ")")
+
+#K2 mod
+cdata <- ddply(dt, c("Substrate", "Date","Location","R.2_adj_avg_1stmod"), summarise,
+               mean = round(mean(K2_avg.1, na.rm=TRUE),digits=2))
+k2mod=paste0(cdata$mean, "(", round(cdata$R.2_adj_avg_1stmod,digits=2), ")")
+k2mod
+
+
+
+
+Location=as.character(cdata$Location)
+Date=as.character(cdata$Date)
+Substrate=as.character(cdata$Substrate)
+
+new<-cbind(Substrate,Date, Location, HRTcrit, um, kchen, k1,k2,k1mod, k2mod, lag,kt,T80,T90)
+new
+
+#<br/> html for new line
+  names=c("Substrate Composition     ","Date","Location","HRT<sub>critical</sub> <br/> day","&#956m <br/> day<sup>-1</sup>","k<sub>Chen</sub> <br/>  day<sup>-1</sup>","k<sub>first</sub> <br/>  day<sup>-1</sup>","k<sub>second</sub> <br/>  day<sup>-1</sup>","k<sub>1 modifed first order</sub> <br/> day<sup>-1</sup>","k<sub>2 modified first order</sub> <br/>  day<sup>-1</sup>","lag <br/> day", "k<sub>t</sub> <br/> day<sup>-1</sup>","T<sub>80</sub> <br/> day","T<sub>90</sub> <br/> day")
+  
+
+x=kable_styling(kable(new[order(Substrate),], format='html', col.names=names, escape = FALSE,table.attr = "style = \"color: black;\""),"striped","scale_down")  
+kableExtra::row_spec(x, 0, extra_css = "border-bottom: 1px solid")
+x
+ 
+  save_kable(x, file='Growth Kinetics BMP.png')
+  
+  #Save as soft text
+write.table(new, file = "Growth Kinetics BMP.txt", sep = ",", quote = FALSE, row.names = F)
+#save as pdf
+save_kable(x, file='Growth Kinetics BMP.pdf')
+#Save as png
+save_kable(x, file='Growth Kinetics BMP.png')
+
+
+
+                       
+
+```
+
+
+#Methane production based on mL CH4/g vS added
+```{r}
+
+#ONly do final day
+dt=filter(dt, Day=='Final')
+
+#Chen & Hashimoto
+cdata <- ddply(dt, c("Substrate", "Date","Location","B_R.2_adj_avg_pred_Chen"), summarise,
+               mean = round(mean(B_pred_avg_Chen, na.rm=TRUE),digits=2))
+Predicted_Chen=paste0(cdata$mean, "(", round(cdata$B_R.2_adj_avg_pred_Chen,digits=2), ")")
+
+
+#Gompertz predicted
+cdata <- ddply(dt, c("Substrate", "Date","Location","B_R.2_adj_pred_avg_Gompertz"), summarise,
+               mean = round(mean(as.numeric(B_pred_avg_Gompertz), na.rm=TRUE),digits=2))
+Predicted_Gompertz=paste0(cdata$mean, "(", round(as.numeric(cdata$B_R.2_adj_pred_avg_Gompertz),digits=2), ")")
+
+#First predicted
+cdata <- ddply(dt, c("Substrate", "Date","Location","B_R.2_adj_avg_pred_1st"), summarise,
+               mean = round(mean(B_pred_avg_1st, na.rm=TRUE),digits=2))
+Predicted_1st=paste0(cdata$mean, "(", round(cdata$B_R.2_adj_avg_pred_1st,digits=2), ")")
+
+#Second predicted
+cdata <- ddply(dt, c("Substrate", "Date","Location","B_R.2_adj_avg_B_avg_pred_2nd"), summarise,
+               mean = round(mean(B_pred_avg_2nd, na.rm=TRUE),digits=2))
+Predicted_2nd=paste0(cdata$mean, "(", round(cdata$B_R.2_adj_avg_B_avg_pred_2nd,digits=2), ")")
+
+#First modified predicted
+cdata <- ddply(dt, c("Substrate", "Date","Location","B_R.2_adj_avg_pred_1stmod"), summarise,
+               mean = round(mean(as.numeric(B_pred_avg_1stmod), na.rm=TRUE),digits=2))
+Predicted_1stmod=paste0(cdata$mean, "(", round(as.numeric(cdata$B_R.2_adj_avg_pred_1stmod),digits=2), ")")
+
+#Methane Yield
+cdata <- ddply(dt, c("Substrate", "Date","Location"), summarise,
+               mean = round(mean(CH4_Yield_VS_added, na.rm=TRUE),digits=2))
+Methane_Yield=paste0(cdata$mean)
+
+
+Location=as.character(cdata$Location)
+Date=as.character(cdata$Date)
+Substrate=as.character(cdata$Substrate)
+#Methane_Yield=as.character(round(cdata$CH4_Yield_VS_added,digits=0))
+
+new<-cbind(Substrate,Date, Location, Methane_Yield,Predicted_Chen,Predicted_Gompertz,Predicted_1st,Predicted_2nd,Predicted_1stmod)
+new
+
+names =c("Substrate Composition","Date","Location","BMP <br/> mL CH<sub>4</sub> gVSadded<sup>-1</sup>","Predicted Chen & Hashimoto BMP <br/> mL CH<sub>4</sub> gVSadded<sup>-1</sup>","Predicted Gompertz BMP <br/> mL CH<sub>4</sub> gVSadded<sup>-1</sup>","Predicted First Order BMP <br/> mL CH<sub>4</sub> gVSadded<sup>-1</sup>", "Predicted Second Order BMP <br/> mL CH<sub>4</sub> gVSadded<sup>-1</sup>","Predicted Modified First Order BMP <br/> mL CH<sub>4</sub> gVSadded<sup>-1</sup>")
+
+x=kable_styling(kable(new[order(Substrate),], format='html', col.names=names, escape = FALSE,table.attr = "style = \"color: black;\""),"striped","scale_down")  
+kableExtra::row_spec(x, 0, extra_css = "border-bottom: 1px solid")
+x
+
+
+kable_styling(kable(new[order(Substrate),], format='html', col.names=names, escape = FALSE,table.attr = "style = \"color: black;\""),bootstrap_options = c("striped", "hover", "condensed","bordered"),full_width = F)
+kableExtra::row_spec(x, 0, extra_css = "border-bottom: 1px solid")
+#kableExtra::as_image(width = 8,density=800)
+
+
+save_kable(x, file='BMP v Predicted BMP.png')
+
+#Save as soft text
+write.table(new, file = "BMP v Predicted BMP.txt", sep = ",", quote = FALSE, row.names = F)
+#save as pdf
+save_kable(x, file='BMP v Predicted BMP.pdf')
+#Save as png
+save_kable(x, file=' BMP v Predicted BMP.png')
+
+
+```
+  
+
+  
+  
+#CH4 value for each treatment
+
+```{r}
+#ONly do final day
+dt=filter(dt, Day=='Final')
+
+
+#CH4 g TCOD added
+cdata <- ddply(dt, c("Substrate", "Date","Day"), summarise,
+               mean = round(mean(CH4_Yield_TCOD_added, na.rm=TRUE),digits=4),
+              sd = round(sd(CH4_Yield_TCOD_added, na.rm=TRUE),digits=4)
+              
+)
+CH4TCOD=paste0(cdata$mean, " ? ", cdata$sd)
+
+#CH4 g VS added
+cdata <- ddply(dt, c("Substrate", "Date","Day"), summarise,
+               mean = round(mean(CH4_Yield_VS_added, na.rm=TRUE),digits=4),
+              sd = round(sd(CH4_Yield_VS_added, na.rm=TRUE),digits=4)
+              
+)
+CH4VSadded=paste0(cdata$mean, " ? ", cdata$sd)
+
+
+Date=as.character(cdata$Date)
+Day=as.character(cdata$Day)
+Substrate=as.character(cdata$Substrate)
+
+new<-cbind(Date, Day, Substrate, CH4VSadded, CH4TCOD)
+new
+
+#<br/> html for new line
+  names=c("Test No.","Day","Treatment", "CH4 Yield g VS added","CH4 g TCOD added")
+
+    #options(knitr.table.format = "html")
+x=kable_styling(kable(new, format='html', col.names=names, escape = FALSE,table.attr = "style = \"color: black;\""),"striped","scale_down")
+x
+
+#Save as soft text
+write.table(new, file = "CH4 yield.txt", sep = ",", quote = FALSE, row.names = F)
+#save as pdf
+save_kable(x, file=' CH4 yield.pdf')
+#Save as png
+save_kable(x, file=' CH4 yield.png')
+
+
+
+
+
+```
+
+
+#Generate a table of pearson correlations
+http://www.sthda.com/english/wiki/correlation-test-between-two-variables-in-r
+https://statistics.laerd.com/statistical-guides/pearson-correlation-coefficient-statistical-guide.php
+https://bookdown.org/ndphillips/YaRrr/correlation-cor-test.html
+
+```{r}
+library(magicfor)
+#Filter out Day 0
+dt=filter(dt, Day=='Zero')
+x<-cbind(dt$H2S_yield_gVSadded,dt$CONDUCTIVITY,dt$SCOD,dt$SCOD.TCOD,dt$TKN,dt$TN,dt$INORGN,dt$TVFA,dt$TALK,dt$TANNIC, dt$TAN,dt$FE,dt$SULFATE,dt$TCOD.SULFATE,dt$pH,dt$CU,dt$NI,dt$TP, dt$OP, dt$OP.TP,dt$TVFA.TALK,dt$TAN.TKN,dt$TCOD.TKN,dt$FE.II..S, dt$Fe.II..TP,dt$TCOD.TN.TP)
+
+
+#Replace 0 with small value 
+x[x==0]<-0.00001
+x_trans=log(na.omit(x))
+#x_trans=na.omit(x)
+num=dim(x)[2]
+i=1
+opp1<-list()
+opp2<-list()
+opp3<-list()
+while (i<=num){
+op1<-c() #Initialize a clean list
+op2<-c()
+op3<-c()
+#Check normality of data
+t.lm=lm(x_trans[,1]~x_trans[,i])
+norm_check=shapiro.test(t.lm$residuals) #If P-value <0.05 than the data is not normally distriuted
+print(norm_check)
+#Use pearson for normal, spearman for non-normal
+if (norm_check[2]<0.05){coeff=cor(x_trans[,1], x_trans[,i], method = "spearman")
+method="spearman"}
+else {
+coeff=cor(x_trans[,1], x_trans[,i], method = "pearson")
+method="pearson"}
+pval=cor.test(x_trans[,1],x_trans[,i], method=method)$p.value
+print(coeff)
+op1<-coeff  #Put results in a clean list
+opp1[[i]]<-op1 #Create a list of lists
+op2<-method
+opp2[[i]]<-op2
+op3<-pval
+opp3[[i]]<-op3
+i=i+1
+}
+
+
+opp1=do.call("rbind", opp1)
+opp2=do.call("rbind", opp2)
+opp3=do.call("rbind", opp3)
+
+pars<-c("H2SgVSadded","Conductivity","SCOD","SCOD.TCOD","TKN","TN","INORGN","TVFA", "TALK","TANNIC","TAN","FE","Sulfate","TCOD.Sulfate","pH","CU","NI","TP","OP","OP.TP","TVFA.TALK","TAN.TKN","TCOD.TKN","FE(II).S","Fe(II).TP","TCOD.TN.TP")
+
+p<-cbind(pars,opp1,opp2,opp3)
+
+cormatrix<-as.data.frame(p)
+names(cormatrix)<-c("Parameter","Correlation Coefficient","Test","pval")
+cormatrix
+
+
+
+#cor(sqrt(na.omit(x)))
+#comatrix=cor(log(na.omit(x)))
+#comatrix=cor(x_trans)
+#pars<-c("H2SgVSadded","Conductivity","SCOD","SCOD.TCOD","TKN","TN","INORGN","TVFA", "TALK","TANNIC","TAN","FE","Sulfate","TCOD.Sulfate","pH","CU","NI","TP","OP","OP.TP","TVFA.TALK","TAN.TKN","TCOD.TKN","FE(II).S","Fe(II).TP","TCOD.TN.TP")
+#corrframe=cbind(pars,comatrix[,1])
+#corrframe
+
+#<br/> html for new line
+#names=c("Parameter.","Coefficient")
+
+    #options(knitr.table.format = "html")
+x=kable_styling(kable(cormatrix, format='html', escape = FALSE,table.attr = "style = \"color: black;\""),"striped","scale_down")
+x
+
+#Save as soft text
+write.table(cormatrix, file = "Correlation H2S yield.txt", sep = ",", quote = FALSE, row.names = F)
+#save as pdf
+save_kable(x, file=' Correlation H2S yield.pdf')
+#Save as png
+save_kable(x, file='Correlation H2S yield.png')
+```
