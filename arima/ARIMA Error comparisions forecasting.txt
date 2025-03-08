@@ -1,0 +1,13 @@
+                  MSE              RMSE   R2             Bottle Model
+1                   4                 2 <NA> EQ.90..WEFFL.10..A ARIMA
+2                   0                 0 <NA> EQ.90..WEFFL.10..B ARIMA
+3  0.0101208002814623 0.100602188253846 <NA> EQ.90..WEFFL.10..C ARIMA
+4                   0                 0 <NA>  EQ.90..WMID.10..A ARIMA
+5                   0                 0 <NA>  EQ.90..WMID.10..C ARIMA
+6  0.0043003105320763 0.065576752985157 <NA>       WEFFL.100..A ARIMA
+7                   0                 0 <NA>       WEFFL.100..B ARIMA
+8  0.0667178657966442 0.258298017407498 <NA>       WEFFL.100..C ARIMA
+9  0.0141564920913773  0.11898105769986 <NA>        WEFFL.10..A ARIMA
+10                  0                 0 <NA>        WEFFL.10..B ARIMA
+11                  0                 0 <NA>         WMID.10..A ARIMA
+12 0.0848584271445092 0.291304698116095 <NA>         WMID.10..B ARIMA

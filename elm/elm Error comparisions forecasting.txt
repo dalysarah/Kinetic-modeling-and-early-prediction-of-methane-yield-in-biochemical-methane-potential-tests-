@@ -1,0 +1,4 @@
+                  MSE               RMSE   R2             Bottle Model
+1                   4                  2 <NA> EQ.90..WEFFL.10..A   ELM
+2 0.00113302438631919 0.0336604276015501 <NA> EQ.90..WEFFL.10..B   ELM
+3  0.0201869285861565  0.142080711520447 <NA> EQ.90..WEFFL.10..C   ELM
